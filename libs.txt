@@ -1,0 +1,4 @@
+eyeD3
+progressbar
+moviepy
+pytube
