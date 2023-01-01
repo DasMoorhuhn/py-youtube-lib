@@ -1,3 +1,4 @@
+mutagen
 eyeD3
 progressbar
 moviepy
