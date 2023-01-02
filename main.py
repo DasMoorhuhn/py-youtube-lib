@@ -14,4 +14,9 @@ def choice(url):
         yt = YtVideo(url)
         yt.download()
 
-choice(men())
+try:
+    while True:
+        choice(men())
+except:
+    print("exit...")
+    exit(0)
