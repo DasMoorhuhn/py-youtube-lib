@@ -3,3 +3,4 @@ eyeD3
 progressbar
 moviepy
 pytube
+ytmusicapi

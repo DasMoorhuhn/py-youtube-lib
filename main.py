@@ -1,7 +1,5 @@
 from classes import YtPlaylist, YtVideo
 
-url = 'https://music.youtube.com/playlist?list=PLlypPVRGSnlsxaK7ZyRPTU_FNH3ctNdwo'
-
 def men():
     print("")
     print("Type URL to the video or playlist")
@@ -16,9 +14,4 @@ def choice(url):
         yt = YtVideo(url)
         yt.download()
 
-try:
-    while True:
-        choice(men())
-except:
-    print("exit...")
-    exit(0)
+choice(men())

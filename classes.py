@@ -8,6 +8,8 @@ import progressbar
 import eyed3
 import os
 import urllib.request
+import json
+import ytmusicapi
 
 def createDownloadDir(path):
     try:os.makedirs(path)
@@ -16,12 +18,14 @@ def createDownloadDir(path):
 class YtPlaylist:
     def __init__(self, url, editTags=False) -> None:
         self.yt = Playlist(url)
+        self.ytMusicAPI = ytmusicapi.YTMusic()
         self.videos = self.yt.videos
         self.countVideos = len(self.videos)
         self.savedVideos = []
         self.savedMP3 = []
         self.artist = ""
         self.album = ""
+        self.year = self.ytMusicAPI.get_album(self.ytMusicAPI.get_album_browse_id(self.yt.playlist_id))['year']
         self.filePath = ""
         self.percent = pp()
         self.convert = Converter()
@@ -105,7 +109,7 @@ class YtPlaylist:
             print("\nEdit meta tags...\n")
             count = 1
             for file in self.savedMP3:
-                self.editMP3.tags(mp3File=file, artist=self.artist, album=self.album, trackNR=count, icon=f"{self.filePath}/icon.png")
+                self.editMP3.tags(mp3File=file, artist=self.artist, album=self.album, trackNR=count, date=self.year, icon=f"{self.filePath}/icon.png")
                 count += 1
 
     def downloadVideo(self):
@@ -178,7 +182,7 @@ class EditMP3:
     def __init__(self) -> None:
         pass
 
-    def tags(self, mp3File, artist, album, trackNR, icon):
+    def tags(self, mp3File, artist, album, trackNR, date, icon):
         audiofile = eyed3.load(mp3File)
         if (audiofile.tag == None):
             audiofile.initTag()
@@ -186,8 +190,9 @@ class EditMP3:
         audiofile.tag.save()
 
         audio = EasyID3(mp3File)
-        audio['artist'] = artist
-        audio['album'] = album
+        audio['artist'] = str(artist)
+        audio['album'] = str(album)
+        audio['date'] = str(date)
         audio['tracknumber'] = str(trackNR)
         audio.save()
 
