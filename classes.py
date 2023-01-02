@@ -83,7 +83,7 @@ class YtPlaylist:
 
         print("Download Done\n")
         print("Start convert files to MP3...\n")
-        print(self.savedVideos)
+        
         for file in self.savedVideos:
             file = str(file)
             filePath = file.split("/")
