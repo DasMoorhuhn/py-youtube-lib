@@ -105,7 +105,6 @@ class YtPlaylist:
             print("\nEdit meta tags...\n")
             count = 1
             for file in self.savedMP3:
-                print(file)
                 self.editMP3.tags(mp3File=file, artist=self.artist, album=self.album, trackNR=count, icon=f"{self.filePath}/icon.png")
                 count += 1
 
