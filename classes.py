@@ -1,163 +1,135 @@
-import progressbar
-import os
-import urllib.request
-import ytmusicapi
-
 from pytube import YouTube
 from pytube import Playlist
+from pytube import Channel
+from moviepy.editor import *
 from mutagen.easyid3 import EasyID3
 from eyed3.id3.frames import ImageFrame
-
-from converter import Converter
-from edit_mp3 import EditMP3
-
+import progressbar
+import eyed3
+import os
+import urllib.request
+import json
 
 def createDownloadDir(path):
     try:os.makedirs(path)
-    except: pass
+    except:pass
 
+class YtChannel:
+    def __init__(self, url) -> None:
+        self.yt = Channel(url=url)
+        
+    def test(self):
+        #print(json.dumps(self.yt.sidebar_info, indent=2))
+        pass
 
 class YtPlaylist:
-    def __init__(self, url, edit_tags=False) -> None:
+    def __init__(self, url, editTags=False) -> None:
         self.yt = Playlist(url)
-        self.yt_music_api = ytmusicapi.YTMusic(auth="oauth.json")
         self.videos = self.yt.videos
-        self.count_videos = len(self.videos)
-        self.saved_videos = []
-        self.saved_mp3 = []
+        self.countVideos = len(self.videos)
+        self.savedVideos = []
+        self.savedMP3 = []
         self.artist = ""
         self.album = ""
-        try:self.year = self.yt_music_api.get_album(self.yt_music_api.get_album_browse_id(self.yt.playlist_id))['year']
-        except:pass
-        self.file_path = ""
+        self.filePath = ""
+        self.percent = pp()
         self.convert = Converter()
         self.editMP3 = EditMP3()
-        self.editTags = edit_tags
+        self.editTags = editTags
 
-    def __edit_author(self, author:str):
+    def __editAuthor(self, author:str):
         if "- Topic" in author:
             return author.split("- Topic")[0]
         
         if not "- Topic" in author:
             return author
 
-    def __convert_to_mp3(self):
-        # print("Convert to MP3...")
-        # pg_bar = progressbar.progressbar.ProgressBar(
-        #     maxval=self.count_videos,
-        #     term_width=60
-        # )
-        # pg_bar.start()
-        # count = 0
-
-        for file in self.saved_videos:
-            # pg_bar.update(count)
-            file = str(file)
-            file_path = file.split("/")
-            file_name = file_path[-1]
-            file_ending = file_name.split(".mp4")[0]
-            file_path = file_path[:-1]
-            final_file_path = ""
-            for i in file_path:
-                if i == '':continue
-                final_file_path += f"/{i}"
-            self.convert.mp4_to_mp3(mp4=file, mp3=f"{str(final_file_path)}/{file_ending}.mp3")
-            self.saved_mp3.append(f"{str(final_file_path)}/{file_ending}.mp3")
-            self.file_path = final_file_path
-            os.remove(path=file)
-            # count += 1
-        # pg_bar.finish()
-
-    def download_audio(self):
-        folder_name = ""
-        print(f"Download from {self.count_videos} files started...\n")
+    def downloadAudio(self):
+        pgBar = progressbar.progressbar.ProgressBar().start()
+        count = 0
+        folderName = ""
+        print(f"Download from {self.countVideos} files started...\n")
         print(self.yt.title)
-
         if self.yt.title == 'Songs':
-            first_song = self.videos[2]
-            first_song:YouTube
-            author = self.__edit_author(first_song.author)
-            folder_name = f"{author.strip()}"
+            firstSong = self.videos[2]
+            firstSong:YouTube
+            author = self.__editAuthor(firstSong.author)
+            folderName = f"{author.strip()}"
 
         if self.yt.title == 'Single':
             pass
 
         if "Album - " in self.yt.title:
-            first_song = self.videos[0]
-            first_song:YouTube
-            author = self.__edit_author(first_song.author)
-            album_title = str(self.yt.title).split("Album - ")[1]
+            firstSong = self.videos[0]
+            firstSong:YouTube
+            author = self.__editAuthor(firstSong.author)
+            albumTitle = str(self.yt.title).split("Album - ")[1]
             self.artist = author
-            self.album = album_title
-            folder_name = f"{author.strip()}/{album_title.strip()}"
+            self.album = albumTitle
+            folderName = f"{author.strip()}/{albumTitle.strip()}"
             
-            path = f"Downloads/Playlists/{folder_name}"
+            path = f"Downloads/Playlists/{folderName}"
             createDownloadDir(path=path)
 
-            icon_url = self.yt.sidebar_info[0]['playlistSidebarPrimaryInfoRenderer']['thumbnailRenderer']['playlistCustomThumbnailRenderer']['thumbnail']['thumbnails'][-1]['url']
-            resource = urllib.request.urlopen(icon_url)
-            output = open(f"Downloads/Playlists/{folder_name}/icon.png","wb")
+            iconURL = self.yt.sidebar_info[0]['playlistSidebarPrimaryInfoRenderer']['thumbnailRenderer']['playlistCustomThumbnailRenderer']['thumbnail']['thumbnails'][-1]['url']
+            resource = urllib.request.urlopen(iconURL)
+            output = open(f"Downloads/Playlists/{folderName}/icon.png","wb")
             output.write(resource.read())
             output.close()
 
-        if folder_name == "":
-            folder_name = self.yt.title
-
-        pg_bar = progressbar.progressbar.ProgressBar(
-            maxval=self.count_videos,
-            term_width=60
-        )
-        pg_bar.start()
-        count = 0
-
+        if folderName == "":
+            folderName = self.yt.title
+        
         for video in self.videos:
             video:YouTube
-            pg_bar.update(int(count))
-            path = f"Downloads/Playlists/{folder_name}"
+            progress = self.percent.pro(G=self.countVideos, W=count)
+            pgBar.update(int(progress))
+            path = f"Downloads/Playlists/{folderName}"
             createDownloadDir(path=path)
-            self.saved_videos.append(video.streams.get_audio_only(subtype="mp4").download(output_path=path))
+            self.savedVideos.append(video.streams.get_audio_only(subtype="mp4").download(output_path=path))
             count += 1
-        pg_bar.finish()
+        pgBar.finish()
 
         print("Download Done\n")
         print("Start convert files to MP3...\n")
-        
-        self.__convert_to_mp3()
+        print(self.savedVideos)
+        for file in self.savedVideos:
+            file = str(file)
+            filePath = file.split("/")
+            fileName = filePath[-1]
+            fileEnding = fileName.split(".mp4")[0]
+            filePath = filePath[:-1]
+            finalFilePath = ""
+            for i in filePath:
+                if i == '':continue
+                finalFilePath += f"/{i}"
+
+            self.convert.MP4ToMP3(mp4=file, mp3=f"{str(finalFilePath)}/{fileEnding}.mp3")
+            self.savedMP3.append(f"{str(finalFilePath)}/{fileEnding}.mp3")
+            self.filePath = finalFilePath
+            os.remove(path=file)
+            print("\n")
 
         if self.editTags:
             print("\nEdit meta tags...\n")
             count = 1
-            for file in self.saved_mp3:
-                self.editMP3.tags(mp3File=file, artist=self.artist, album=self.album, trackNR=count, date=self.year, icon=f"{self.file_path}/icon.png")
+            for file in self.savedMP3:
+                self.editMP3.tags(mp3File=file, artist=self.artist, album=self.album, trackNR=count, icon=f"{self.filePath}/icon.png")
                 count += 1
 
-    def download_videos(self, convert_to_mp3=False):
-        print(f"Download from {self.count_videos} files started...\n")
-
-        pg_bar = progressbar.progressbar.ProgressBar(
-            maxval=self.count_videos,
-            term_width=60
-        )
-        pg_bar.start()
-        count = 0
-
+    def downloadVideo(self):
         for video in self.videos:
             video:YouTube
+            print(f"Started download: {video.title}")
             path = f"Downloads/Playlists/{video.author}"
             createDownloadDir(path=path)
-            self.saved_videos.append(video.streams.get_highest_resolution().download(output_path=path))
-            pg_bar.update(int(count))
-            count += 1
-        pg_bar.finish()
-        print("done\n")
-
-        if convert_to_mp3:
-            self.__convert_to_mp3()
+            self.savedVideos.append(video.streams.get_highest_resolution().download(output_path=path))
+            print("done\n")
 
 
 class YtVideo:
     def __init__(self, url) -> None:
-        self.video = YouTube(url, use_oauth=True)
+        self.video = YouTube(url)
 
     def download(self):
         print(self.video)
@@ -167,3 +139,88 @@ class YtVideo:
         self.video.streams.get_highest_resolution().download(output_path=path)
 
 
+class pp:
+    def pro(self, G, W):
+        if G == 0 and W == 0:
+            return 100
+        p = W/G
+        p = round(p, 2)
+
+        if p < 1:
+            p = str(p).split(".")
+            if p[1] == "1":
+                return("10")
+            elif p[1] == "2":
+                return("20")
+            elif p[1] == "3":
+                return("30")
+            elif p[1] == "4":
+                return("40")
+            elif p[1] == "5":
+                return("50")
+            elif p[1] == "6":
+                return("60")
+            elif p[1] == "7":
+                return("70")
+            elif p[1] == "8":
+                return("80")
+            elif p[1] == "9":
+                return("90")
+            else:
+                return(str(p[1]))
+        else:
+            p = str(p).split(".")
+            return("100")
+
+
+class Converter:
+    def __init__(self) -> None:
+        pass
+
+    def MP4ToMP3(self, mp4, mp3):
+        FILETOCONVERT = AudioFileClip(mp4)
+        FILETOCONVERT.write_audiofile(mp3)
+        FILETOCONVERT.close()
+
+
+class EditMP3:
+    def __init__(self) -> None:
+        pass
+
+    def tags(self, mp3File, artist, album, trackNR, icon):
+        audiofile = eyed3.load(mp3File)
+        if (audiofile.tag == None):
+            audiofile.initTag()
+        audiofile.tag.images.set(ImageFrame.FRONT_COVER, open(icon,'rb').read(), 'image/png')
+        audiofile.tag.save()
+
+        audio = EasyID3(mp3File)
+        audio['artist'] = artist
+        audio['album'] = album
+        audio['tracknumber'] = str(trackNR)
+        audio.save()
+
+# Not deeded but nice to know
+"""
+from mutagen.id3 import ID3NoHeaderError
+from mutagen.id3 import ID3, TIT2, TALB, TPE1, TPE2, COMM, TCOM, TCON, TDRC, TRCK
+
+# Read the ID3 tag or create one if not present
+try: 
+    tags = ID3(fname)
+except ID3NoHeaderError:
+    print("Adding ID3 header")
+    tags = ID3()
+
+tags["TIT2"] = TIT2(encoding=3, text=title)
+tags["TALB"] = TALB(encoding=3, text=u'mutagen Album Name')
+tags["TPE2"] = TPE2(encoding=3, text=u'mutagen Band')
+tags["COMM"] = COMM(encoding=3, lang=u'eng', desc='desc', text=u'mutagen comment')
+tags["TPE1"] = TPE1(encoding=3, text=u'mutagen Artist')
+tags["TCOM"] = TCOM(encoding=3, text=u'mutagen Composer')
+tags["TCON"] = TCON(encoding=3, text=u'mutagen Genre')
+tags["TDRC"] = TDRC(encoding=3, text=u'2010')
+tags["TRCK"] = TRCK(encoding=3, text=u'track_number')
+
+tags.save(fname)
+"""

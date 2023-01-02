@@ -1,66 +1,21 @@
-from classes import YtPlaylist, YtVideo
-import os
-
-if not os.path.exists("./oauth.json"):
-    print("Please get the oauth.json file using the 'ytmusicapi oauth' command")
-    exit(1)
-
+from classes import YtPlaylist, YtVideo, YtChannel
 
 def men():
     print("")
     print("Type URL to the video or playlist")
-    return input(">>> ")
+    #return input(">>> ")
+    return "https://music.youtube.com/channel/UCGNrk1jAXPUUlmdEuayU18A?feature=share"
 
-
-def download_youtube_music_playlist(url):
-    yt = YtPlaylist(url, edit_tags=True)
-    yt.download_audio()
-
-
-def download_youtube_playlist(url):
-    print("Convert to MP3?")
-    convert = False
-    user_input = str(input("(y/n) >>> "))
-    if user_input.lower() == 'y':
-        convert = True
-    else:
-        pass
-
-    yt = YtPlaylist(url)
-    yt.download_videos(convert_to_mp3=convert)
-
-
-def download_single_video(url):
-    yt = YtVideo(url)
-    yt.download()
-
-
-def read_file():
-    with open(file="list.txt", mode="r") as file:
-        return file.readlines()
-
-def write_file(text):
-    with open(file="list.txt", mode="w") as file:
-        file.write(text)
-
-def choose(url):
+def choice(url):
+    yt = YtChannel(url=url)
+    yt.test()
+"""
     if 'playlist?list=' in url:
-        if 'playlist?list=OLA' in url:
-            download_youtube_music_playlist(url)
-
-        # yt playlist
-        if 'playlist?list=PLG' in url:
-            download_youtube_playlist(url)
-
+        yt = YtPlaylist(url, editTags=True)
+        yt.downloadAudio()
+        #yt.getInfos()
     else:
-        download_single_video(url)
-
-if os.path.exists("./list.txt"):
-    print("Download from list")
-    url_list = read_file()
-    
-    for url in url_list:
-        yt = YtPlaylist(url, edit_tags=True)
-        yt.download_audio()
-else:
-    choose(men())
+        yt = YtVideo(url)
+        yt.download()
+"""
+choice(men())
