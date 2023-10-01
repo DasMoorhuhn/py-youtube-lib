@@ -9,13 +9,14 @@ def men():
 
 def choice(url):
     if 'playlist?list=' in url:
-        print("Playlist")
         yt = YtPlaylist(url, editTags=True)
         yt.downloadAudio()
-        # yt.getInfos()
     else:
         yt = YtVideo(url)
         yt.download()
 
 
-choice(men())
+try:
+    while True:choice(men())
+except:
+    exit(0)

@@ -1,6 +1,6 @@
-mutagen
-eyeD3
-progressbar
-moviepy
-pytube
-ytmusicapi
+mutagen==1.47.0
+eyeD3==0.8.10
+progressbar==2.5
+moviepy==1.0.3
+pytube==15.0.0
+ytmusicapi==1.2.1
