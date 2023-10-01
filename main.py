@@ -30,7 +30,6 @@ def download_youtube_playlist(url):
     yt.download_videos(convert_to_mp3=convert)
 
 
-
 def download_single_video(url):
     yt = YtVideo(url)
     yt.download()
