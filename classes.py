@@ -1,24 +1,26 @@
-from pytube import YouTube
-from pytube import Playlist
-from pytube import Channel
-from moviepy.editor import *
-from mutagen.easyid3 import EasyID3
-from eyed3.id3.frames import ImageFrame
 import progressbar
-import eyed3
 import os
 import urllib.request
-import json
 import ytmusicapi
+
+from pytube import YouTube
+from pytube import Playlist
+from mutagen.easyid3 import EasyID3
+from eyed3.id3.frames import ImageFrame
+
+from converter import Converter
+from edit_mp3 import EditMP3
+
 
 def createDownloadDir(path):
     try:os.makedirs(path)
-    except:pass
+    except: pass
+
 
 class YtPlaylist:
     def __init__(self, url, editTags=False) -> None:
         self.yt = Playlist(url)
-        self.ytMusicAPI = ytmusicapi.YTMusic()
+        self.ytMusicAPI = ytmusicapi.YTMusic(auth="oauth.json")
         self.videos = self.yt.videos
         self.countVideos = len(self.videos)
         self.savedVideos = []
@@ -27,7 +29,6 @@ class YtPlaylist:
         self.album = ""
         self.year = self.ytMusicAPI.get_album(self.ytMusicAPI.get_album_browse_id(self.yt.playlist_id))['year']
         self.filePath = ""
-        self.percent = pp()
         self.convert = Converter()
         self.editMP3 = EditMP3()
         self.editTags = editTags
@@ -40,50 +41,55 @@ class YtPlaylist:
             return author
 
     def downloadAudio(self):
-        pgBar = progressbar.progressbar.ProgressBar().start()
-        count = 0
-        folderName = ""
+        folder_name = ""
         print(f"Download from {self.countVideos} files started...\n")
         print(self.yt.title)
+
         if self.yt.title == 'Songs':
-            firstSong = self.videos[2]
-            firstSong:YouTube
-            author = self.__editAuthor(firstSong.author)
-            folderName = f"{author.strip()}"
+            first_song = self.videos[2]
+            first_song:YouTube
+            author = self.__editAuthor(first_song.author)
+            folder_name = f"{author.strip()}"
 
         if self.yt.title == 'Single':
             pass
 
         if "Album - " in self.yt.title:
-            firstSong = self.videos[0]
-            firstSong:YouTube
-            author = self.__editAuthor(firstSong.author)
+            first_song = self.videos[0]
+            first_song:YouTube
+            author = self.__editAuthor(first_song.author)
             albumTitle = str(self.yt.title).split("Album - ")[1]
             self.artist = author
             self.album = albumTitle
-            folderName = f"{author.strip()}/{albumTitle.strip()}"
+            folder_name = f"{author.strip()}/{albumTitle.strip()}"
             
-            path = f"Downloads/Playlists/{folderName}"
+            path = f"Downloads/Playlists/{folder_name}"
             createDownloadDir(path=path)
 
             iconURL = self.yt.sidebar_info[0]['playlistSidebarPrimaryInfoRenderer']['thumbnailRenderer']['playlistCustomThumbnailRenderer']['thumbnail']['thumbnails'][-1]['url']
             resource = urllib.request.urlopen(iconURL)
-            output = open(f"Downloads/Playlists/{folderName}/icon.png","wb")
+            output = open(f"Downloads/Playlists/{folder_name}/icon.png","wb")
             output.write(resource.read())
             output.close()
 
-        if folderName == "":
-            folderName = self.yt.title
-        
+        if folder_name == "":
+            folder_name = self.yt.title
+
+        pg_bar = progressbar.progressbar.ProgressBar(
+            maxval=self.countVideos,
+            term_width=60
+        )
+        pg_bar.start()
+        count = 0
+
         for video in self.videos:
             video:YouTube
-            progress = self.percent.pro(G=self.countVideos, W=count)
-            pgBar.update(int(progress))
-            path = f"Downloads/Playlists/{folderName}"
+            pg_bar.update(int(count))
+            path = f"Downloads/Playlists/{folder_name}"
             createDownloadDir(path=path)
             self.savedVideos.append(video.streams.get_audio_only(subtype="mp4").download(output_path=path))
             count += 1
-        pgBar.finish()
+        pg_bar.finish()
 
         print("Download Done\n")
         print("Start convert files to MP3...\n")
@@ -134,89 +140,3 @@ class YtVideo:
         self.video.streams.get_highest_resolution().download(output_path=path)
 
 
-class pp:
-    def pro(self, G, W):
-        if G == 0 and W == 0:
-            return 100
-        p = W/G
-        p = round(p, 2)
-
-        if p < 1:
-            p = str(p).split(".")
-            if p[1] == "1":
-                return("10")
-            elif p[1] == "2":
-                return("20")
-            elif p[1] == "3":
-                return("30")
-            elif p[1] == "4":
-                return("40")
-            elif p[1] == "5":
-                return("50")
-            elif p[1] == "6":
-                return("60")
-            elif p[1] == "7":
-                return("70")
-            elif p[1] == "8":
-                return("80")
-            elif p[1] == "9":
-                return("90")
-            else:
-                return(str(p[1]))
-        else:
-            p = str(p).split(".")
-            return("100")
-
-
-class Converter:
-    def __init__(self) -> None:
-        pass
-
-    def MP4ToMP3(self, mp4, mp3):
-        FILETOCONVERT = AudioFileClip(mp4)
-        FILETOCONVERT.write_audiofile(mp3)
-        FILETOCONVERT.close()
-
-
-class EditMP3:
-    def __init__(self) -> None:
-        pass
-
-    def tags(self, mp3File, artist, album, trackNR, date, icon):
-        audiofile = eyed3.load(mp3File)
-        if (audiofile.tag == None):
-            audiofile.initTag()
-        audiofile.tag.images.set(ImageFrame.FRONT_COVER, open(icon,'rb').read(), 'image/png')
-        audiofile.tag.save()
-
-        audio = EasyID3(mp3File)
-        audio['artist'] = str(artist)
-        audio['album'] = str(album)
-        audio['date'] = str(date)
-        audio['tracknumber'] = str(trackNR)
-        audio.save()
-
-# Not deeded but nice to know
-"""
-from mutagen.id3 import ID3NoHeaderError
-from mutagen.id3 import ID3, TIT2, TALB, TPE1, TPE2, COMM, TCOM, TCON, TDRC, TRCK
-
-# Read the ID3 tag or create one if not present
-try: 
-    tags = ID3(fname)
-except ID3NoHeaderError:
-    print("Adding ID3 header")
-    tags = ID3()
-
-tags["TIT2"] = TIT2(encoding=3, text=title)
-tags["TALB"] = TALB(encoding=3, text=u'mutagen Album Name')
-tags["TPE2"] = TPE2(encoding=3, text=u'mutagen Band')
-tags["COMM"] = COMM(encoding=3, lang=u'eng', desc='desc', text=u'mutagen comment')
-tags["TPE1"] = TPE1(encoding=3, text=u'mutagen Artist')
-tags["TCOM"] = TCOM(encoding=3, text=u'mutagen Composer')
-tags["TCON"] = TCON(encoding=3, text=u'mutagen Genre')
-tags["TDRC"] = TDRC(encoding=3, text=u'2010')
-tags["TRCK"] = TRCK(encoding=3, text=u'track_number')
-
-tags.save(fname)
-"""
