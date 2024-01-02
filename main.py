@@ -35,6 +35,14 @@ def download_single_video(url):
     yt.download()
 
 
+def read_file():
+    with open(file="list.txt", mode="r") as file:
+        return file.readlines()
+
+def write_file(text):
+    with open(file="list.txt", mode="w") as file:
+        file.write(text)
+
 def choose(url):
     if 'playlist?list=' in url:
         if 'playlist?list=OLA' in url:
@@ -47,5 +55,12 @@ def choose(url):
     else:
         download_single_video(url)
 
-
-choose(men())
+if os.path.exists("./list.txt"):
+    print("Download from list")
+    url_list = read_file()
+    
+    for url in url_list:
+        yt = YtPlaylist(url, edit_tags=True)
+        yt.download_audio()
+else:
+    choose(men())
