@@ -1,5 +1,8 @@
+.idea
+.vscode
 __pycache__
-Downloads/
-.idea/
+Downloads
 
 oauth.json
+.coverage
+coverage/
