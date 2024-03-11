@@ -1,4 +1,7 @@
 # Py YouTube
+[![CI](https://gitlab.com/DasMoorhuhn/py-youtube/badges/main/pipeline.svg
+[![Coverage](https://gitlab.com/DasMoorhuhn/py-youtube/badges/main/coverage.svg
+[![Release](https://gitlab.com/DasMoorhuhn/py-youtube/badges/main/release.svg
 
 CURRENTLY UNDER DEVELOPMENT. USE THE [LATES RELEASE](https://gitlab.com/DasMoorhuhn/py-youtube/-/releases) TO RUN THIS SOFTWARE
 
