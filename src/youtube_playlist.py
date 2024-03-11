@@ -2,14 +2,16 @@ from pytube import YouTube
 from pytube import Playlist
 import progressbar
 import os
+import sys
 import urllib.request
+sys.path.append('..')
 
-from helper import create_download_dir
-from helper import edit_author
-from helper import noop
-from helper import string_album, string_single, string_songs
-from edit_mp3 import edit_meta_tags
-from convert_mp4_to_mp3 import mp4_to_mp3
+from src.helper import create_download_dir
+from src.helper import edit_author
+from src.helper import noop
+from src.helper import string_album, string_single, string_songs
+from src.edit_mp3 import edit_meta_tags
+from src.convert_mp4_to_mp3 import mp4_to_mp3
 
 
 class YtPlaylist:

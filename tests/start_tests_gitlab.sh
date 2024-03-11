@@ -1,4 +1,4 @@
-apk add --update wget
+apk add --update wget ffmpeg
 pip3.10 install -r requirements.txt
 sh tests/start_tests.sh
 

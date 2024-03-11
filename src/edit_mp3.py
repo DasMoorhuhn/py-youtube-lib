@@ -1,8 +1,10 @@
 from mutagen.easyid3 import EasyID3
 from eyed3.id3.frames import ImageFrame
 import eyed3
+import sys
+sys.path.append('..')
 
-from helper import noop
+from src.helper import noop
 
 
 def edit_meta_tags(mp3_file, artist, album, track_nr, icon):

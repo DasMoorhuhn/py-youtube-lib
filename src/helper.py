@@ -34,3 +34,7 @@ def link_is_yt_music_playlist(url: str) -> bool:
 def link_is_yt_playlist(url: str) -> bool:
   return True if 'playlist?list=PL' in url else False
 
+
+def replace_spaces(path: str):
+  os.rename(src=path, dst=path.replace(' ', '_'))
+
