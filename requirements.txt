@@ -1,0 +1,9 @@
+mutagen
+eyeD3
+progressbar
+moviepy
+pytube
+
+pytest==7.4.*
+pytest-cov==4.1.*
+pytest-factoryboy==2.5.*

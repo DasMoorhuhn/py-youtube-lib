@@ -1,11 +1,14 @@
 # Py YouTube
 
 This is mainly for downloading from music.youtube.com but also can used for normal videos
-I've developed this for Linux. On Windows it might not work
+
 ## Getting startet
 
+I've developed this for Linux. On Windows it might not work <br>
+
 ```bash
-pip3 install -r libs.txt
-ytmusicapi oauth
+pip3 install -r requirements.txt
+```
+```bash
 python3 main.py
 ```
